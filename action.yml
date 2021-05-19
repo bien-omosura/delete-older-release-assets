@@ -4,7 +4,7 @@ author: tinoji
 
 branding:
   color: red
-  icon: delete
+  icon: trash-2
 
 inputs:
   keep_latest:
