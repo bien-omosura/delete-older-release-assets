@@ -47,16 +47,6 @@ if (keepLatest === 0) {
   console.error("🌶  given `keep_latest` is 0, this will wipe out all releases");
 }
 
-const shouldDeleteTags = process.env.INPUT_DELETE_TAGS === "true";
-
-if (shouldDeleteTags) {
-  console.log("🔖  corresponding tags also will be deleted");
-}
-
-let deletePattern = process.env.INPUT_DELETE_TAG_PATTERN || "";
-if (deletePattern) {
-  console.log(`releases containing ${deletePattern} will be targeted`);
-}
 const commonOpts = {
   host: "api.github.com",
   port: 443,
@@ -68,31 +58,27 @@ const commonOpts = {
   },
 };
 
-async function deleteOlderReleases(keepLatest) {
+async function deleteOlderAssets(keepLatest) {
   let releaseIdsAndTags = [];
   try {
     let data = await fetch({
       ...commonOpts,
+      // TODO: pagenation
       path: `/repos/${owner}/${repo}/releases?per_page=100`,
       method: "GET",
     });
     data = data || [];
-    // filter for delete_pattern
-    const activeMatchedReleases = data.filter(
-      ({ draft, tag_name }) => !draft && tag_name.indexOf(deletePattern) !== -1
-    );
+    const activeReleases = data.filter(({ draft }) => !draft);
 
-    if (activeMatchedReleases.length === 0) {
+    if (activeReleases.length === 0) {
       console.log(`😕  no active releases found. exiting...`);
       return;
     }
 
-    const matchingLoggingAddition = deletePattern.length > 0 ? " matching" : "";
-
     console.log(
-      `💬  found total of ${activeMatchedReleases.length}${matchingLoggingAddition} active release(s)`
+      `💬  found total of ${activeReleases.length} active release(s)`
     );
-    releaseIdsAndTags = activeMatchedReleases
+    releaseIdsAndTags = activeReleases
       .map(({ id, tag_name: tagName }) => ({ id, tagName }))
       .slice(keepLatest);
   } catch (error) {
@@ -113,24 +99,33 @@ async function deleteOlderReleases(keepLatest) {
     const { id: releaseId, tagName } = releaseIdsAndTags[i];
 
     try {
-      console.log(`starting to delete ${tagName} with id ${releaseId}`);
+      console.log(
+        `starting to delete assets of ${tagName} with id ${releaseId}`
+      );
 
-      const _ = await fetch({
+      let assets = await fetch({
         ...commonOpts,
-        path: `/repos/${owner}/${repo}/releases/${releaseId}`,
-        method: "DELETE",
+        // TODO: pagenation
+        path: `/repos/${owner}/${repo}/releases/${releaseId}/assets?per_page=100`,
+        method: "GET",
       });
+      if (assets.length === 0) {
+        console.log(`🏃  no assets found in release. skipping...`);
+        continue;
+      }
 
-      if (shouldDeleteTags) {
+      for (let j = 0; j < assets.length; j++) {
+        const { id: assetId, name: assetName } = assets[j];
         try {
           const _ = await fetch({
             ...commonOpts,
-            path: `/repos/${owner}/${repo}/git/refs/tags/${tagName}`,
+            path: `/repos/${owner}/${repo}/releases/assets/${assetId}`,
             method: "DELETE",
           });
+          console.log(`✅  ${assetName} deleted`);
         } catch (error) {
           console.error(
-            `🌶  failed to delete tag "${tagName}"  <- ${error.message}`
+            `🌶  failed to delete asset "${assetName}"  <- ${error.message}`
           );
           hasError = true;
           break;
@@ -151,12 +146,12 @@ async function deleteOlderReleases(keepLatest) {
   }
 
   console.log(
-    `👍🏼  ${releaseIdsAndTags.length} older release(s) deleted successfully!`
+    `👍  ${releaseIdsAndTags.length} older assets deleted successfully!`
   );
 }
 
 async function run() {
-  await deleteOlderReleases(keepLatest);
+  await deleteOlderAssets(keepLatest);
 }
 
 run();
