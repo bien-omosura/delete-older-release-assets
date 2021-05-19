@@ -7,7 +7,7 @@ Inspired by and forked [dev-drprasad/delete-older-releases](https://github.com/d
 Add following step to your workflow:
 
 ```yaml
-- uses: tinoji/delete-older-release-assets@v1.0.0
+- uses: tinoji/delete-older-release-assets@v1.0.1
   with:
     repo: <owner>/<repoName> # defaults to current repo
     keep_latest: 3
