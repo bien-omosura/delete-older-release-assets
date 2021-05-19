@@ -1,15 +1,16 @@
-# GitHub Action: Delete older releases
+# GitHub Action: Delete older release assets
 
-This action deletes older releases of given repo
+This action deletes older release assets (not releases) of given repo
+
+Inspired by and forked [dev-drprasad/delete-older-releases](https://github.com/dev-drprasad/delete-older-releases).
 
 Add following step to your workflow:
 
 ```yaml
-- uses: dev-drprasad/delete-older-releases@v0.2.0
+- uses: tinoji/delete-older-release-assets@v0.1.0
   with:
     repo: <owner>/<repoName> # defaults to current repo
     keep_latest: 3
-    delete_tag_pattern: beta # defaults to ""
   env:
     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
@@ -22,15 +23,7 @@ Add following step to your workflow:
 | -------- |
 | true     |
 
-Specifies number of latest releases (sorted by `created_at`) to keep. Pass `0` if you want to delete all releases
-
-#### `delete_tags`
-
-| required | default |
-| -------- | ------- |
-| false    | false   |
-
-Specifies whether to delete tags associated to older releases or not. Older tags without any associated releases will not be deleted
+Specifies number of latest releases (sorted by `created_at`) to keep. Pass `0` if you want to delete all release assets.
 
 #### `repo`
 
@@ -38,12 +31,4 @@ Specifies whether to delete tags associated to older releases or not. Older tags
 | -------- | --------------------- |
 | false    | repo executing action |
 
-Repo name in the format of `<owner>/<repoName>`. Defaults to the repo that executing this action
-
-#### `delete_tag_pattern`
-
-| required | default      |
-| -------- | ------------ |
-| false    | empty string |
-
-Specifies a pattern to match. If not specified then every release will be targeted. If specified then every release containing the pattern will be targeted. Use this option for example to remove old beta releases.
+Repo name in the format of `<owner>/<repoName>`. Defaults to the repo that executing this action.
