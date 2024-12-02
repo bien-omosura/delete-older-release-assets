@@ -2,13 +2,8 @@
   "name": "delete-older-releases",
   "version": "0.1.0",
   "main": "index.js",
-  "repository": {
-    "type": "git",
-    "url": ""
-  },
   "keywords": [],
   "author": "REDDY PRASAD",
   "license": "ISC",
-  "homepage": "",
   "dependencies": {}
 }
